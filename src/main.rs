@@ -60,11 +60,12 @@ pub fn paths_to_steps(graph: &HashGraph) -> HashMap<String, Vec<String>> {
     path_to_steps_map
     
 }
-
+//read and parse GFA
 fn read_test_gfa(input: &str) -> HashGraph {
     HashGraph::from_gfa(&parse_gfa(&PathBuf::from(input)).unwrap())
 }
 
+//hashmap with step-id and count of node in a path
 fn obtain_coverage(paths_to_step_map: &HashMap<String, Vec<String>>) -> HashMap<String, u64> {
 
     let mut coverage : HashMap<String, u64> = HashMap::new();
@@ -82,8 +83,6 @@ fn obtain_coverage(paths_to_step_map: &HashMap<String, Vec<String>>) -> HashMap<
 }
 
 
-//pub fn display_node_edges(graph: &HashGraph, h: &Handle) {
-    //println!("node {}", h.id());
  
  /// The function that runs the script
 fn main() {
