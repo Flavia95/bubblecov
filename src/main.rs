@@ -1,4 +1,4 @@
-//use handlegraph::handle::NodeId;
+use handlegraph::handle::NodeId;
 extern crate clap;
 use clap::{Arg, App};
 use handlegraph::hashgraph::HashGraph;
@@ -13,6 +13,10 @@ use handlegraph::handle::Handle;
 use handlegraph::pathgraph::steps_iter;
 use gfa::parser::parse_gfa;
 use handlegraph::pathgraph::PathHandleGraph;
+use std::collections::BTreeMap;
+use handlegraph::handlegraph::HandleGraph;
+
+
 
 
 /// Returns a step as a String with NodeId and Orientation
@@ -60,6 +64,71 @@ pub fn paths_to_steps(graph: &HashGraph) -> HashMap<String, Vec<String>> {
     path_to_steps_map
     
 }
+
+
+/// Returns paths as sequences
+pub fn get_path_to_sequence(
+    graph: &HashGraph,
+    path_to_steps_map: &HashMap<String, Vec<String>>,
+) -> HashMap<String, String> {
+    let mut path_to_sequence_map: HashMap<String, String> = HashMap::new();
+
+    for (path_name, steps_list) in path_to_steps_map {
+        path_to_sequence_map.insert(path_name.to_string(), String::new());
+
+        for node_id_rev in steps_list {
+            path_to_sequence_map
+                .get_mut(path_name)
+                .unwrap()
+                .push_str(graph.sequence(Handle::pack(
+                    NodeId::from(node_id_rev.parse::<u64>().unwrap()),
+                    false,
+                )));
+        }
+    }
+
+    path_to_sequence_map
+}
+
+
+//Return position
+pub fn get_node_positions_in_paths(
+    graph: &HashGraph,
+    path_to_steps_map: &mut HashMap<String, Vec<String>>,
+) -> BTreeMap<NodeId, HashMap<String, usize>> {
+    let mut node_id_to_path_and_pos_map: BTreeMap<NodeId, HashMap<String, usize>> = BTreeMap::new();
+
+    for (path_name, steps_list) in path_to_steps_map {
+        let mut pos = 0;
+
+        for node_id_is_rev in steps_list {
+            // Get orientation
+            let _is_rev = node_id_is_rev.pop().unwrap();
+            // Get the id of the node string -> NodeId
+            let node_id: NodeId = NodeId::from(node_id_is_rev.parse::<u64>().unwrap());
+
+            let node_handle = Handle::pack(node_id, false);
+            let seq = graph.sequence(node_handle);
+
+            node_id_to_path_and_pos_map
+                .entry(node_id)
+                .or_insert_with(HashMap::new);
+
+            if !node_id_to_path_and_pos_map[&node_id].contains_key(path_name) {
+                node_id_to_path_and_pos_map
+                    .get_mut(&node_id)
+                    .unwrap()
+                    .insert(String::from(path_name), pos);
+            }
+
+            pos += seq.len();
+            println!("prov is: {:#?}",path_name);
+        }
+    }
+
+    node_id_to_path_and_pos_map
+}
+
 //read and parse GFA
 fn read_test_gfa(input: &str) -> HashGraph {
     HashGraph::from_gfa(&parse_gfa(&PathBuf::from(input)).unwrap())
@@ -155,4 +224,5 @@ fn main() {
 
         println!("Coverage is: {:#?}",coverage);
 
+	//let node_id_to_path_and_pos_map:: HashMap::String::Vec::String::HashMap::String::Vec::String::get_node_positions_in_paths(&graph);
 }
